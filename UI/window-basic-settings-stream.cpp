@@ -43,7 +43,7 @@ void OBSBasicSettings::InitStreamPage()
 	ui->twitchAddonLabel->setVisible(false);
 	ui->mixerAddonDropdown->setVisible(false);
 	ui->mixerAddonLabel->setVisible(false);
-
+	ui->showroomAddonLabel->setVisible(false);
 	int vertSpacing = ui->topStreamLayout->verticalSpacing();
 
 	QMargins m = ui->topStreamLayout->contentsMargins();
@@ -334,7 +334,7 @@ void OBSBasicSettings::on_service_currentIndexChanged(int)
 	ui->twitchAddonLabel->setVisible(false);
 	ui->mixerAddonDropdown->setVisible(false);
 	ui->mixerAddonLabel->setVisible(false);
-
+	ui->showroomAddonLabel->setVisible(false);
 #ifdef BROWSER_AVAILABLE
 	if (cef) {
 		if (lastService != service.c_str()) {
@@ -348,6 +348,7 @@ void OBSBasicSettings::on_service_currentIndexChanged(int)
 			ui->streamKeyWidget->setVisible(true);
 			ui->streamKeyLabel->setVisible(true);
 			ui->connectAccount2->setVisible(can_auth);
+			ui->showroomAddonLabel->setVisible(true);
 		}
 	} else {
 		ui->connectAccount2->setVisible(false);
@@ -495,6 +496,9 @@ void OBSBasicSettings::OnOAuthStreamKeyConnected()
 		if (strcmp(a->service(), "Mixer") == 0) {
 			ui->mixerAddonLabel->setVisible(true);
 			ui->mixerAddonDropdown->setVisible(true);
+		}
+		if (strcmp(a->service(), "SHOWROOM") == 0) {
+			ui->showroomAddonLabel->setVisible(true);
 		}
 	}
 

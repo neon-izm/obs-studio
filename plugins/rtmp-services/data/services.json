@@ -1733,6 +1733,21 @@
             "recommended": {
                 "keyint": 2
             }
+        },
+        {
+            "name": "SHOWROOM",
+            "servers": [
+                {
+                    "name": "Default",
+                    "url": "rtmp://202.214.205.41:1935/liveorigin"
+                }
+            ],
+            "recommended": {
+                "keyint": 2,
+                "profile": "main",
+                "max video bitrate": 1500,
+                "max audio bitrate": 160
+            }
         }
     ]
 }

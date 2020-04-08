@@ -6,7 +6,7 @@
 #include "rtmp-format-ver.h"
 #include "twitch.h"
 #include "younow.h"
-
+#include "showroom.h"
 struct rtmp_common {
 	char *service;
 	char *server;
@@ -471,6 +471,8 @@ static obs_properties_t *rtmp_common_properties(void *unused)
 
 	obs_properties_add_text(ppts, "key", obs_module_text("StreamKey"),
 				OBS_TEXT_PASSWORD);
+	obs_properties_add_text(ppts, "access", obs_module_text("AccessKey"),
+				OBS_TEXT_PASSWORD);
 	return ppts;
 }
 
@@ -603,6 +605,13 @@ static const char *rtmp_common_url(void *data)
 		}
 	}
 
+	if (service->service && strcmp(service->service, "SHOWROOM") == 0) {
+		if (service->server && service->key) {
+			return showroom_get_ingest(
+				"https://www.dev.showroom-live.com/api/obs/streaming_info?obs_key=",
+				service->key);
+		}
+	}
 	return service->server;
 }
 
