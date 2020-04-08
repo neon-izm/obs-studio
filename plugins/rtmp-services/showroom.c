@@ -10,7 +10,7 @@ struct showroom_mem_struct {
 	size_t size;
 };
 static char *current_ingest = NULL;
-static size_t younow_write_cb(void *contents, size_t size, size_t nmemb,
+static size_t showroom_write_cb(void *contents, size_t size, size_t nmemb,
 			      void *userp)
 {
 	size_t realsize = size * nmemb;
@@ -52,12 +52,12 @@ const char *showroom_get_ingest(const char *server, const char *accessKey)
 	dstr_init(&uri);
 	dstr_copy(&uri, server);
 	dstr_ncat(&uri, accessKey, strlen(accessKey));
-	curl_easy_setopt(curl_handle, CURLOPT_USERPWD, "showstage-test:a5TDZQrg");
+	curl_easy_setopt(curl_handle, CURLOPT_USERPWD, "");
 	curl_easy_setopt(curl_handle, CURLOPT_URL, uri.array);
 	curl_easy_setopt(curl_handle, CURLOPT_SSL_VERIFYPEER, true);
 	curl_easy_setopt(curl_handle, CURLOPT_SSL_VERIFYHOST, 2L);
 	curl_easy_setopt(curl_handle, CURLOPT_TIMEOUT, 3L);
-	curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, younow_write_cb);
+	curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, showroom_write_cb);
 	curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, (void *)&chunk);
 	curl_obs_set_revoke_setting(curl_handle);
 
@@ -71,7 +71,7 @@ const char *showroom_get_ingest(const char *server, const char *accessKey)
 
 	if (res != CURLE_OK) {
 		blog(LOG_WARNING,
-		     "younow_get_ingest: curl_easy_perform() failed: %s",
+		     "showroom_get_ingest: curl_easy_perform() failed: %s",
 		     curl_easy_strerror(res));
 		curl_easy_cleanup(curl_handle);
 		free(chunk.memory);
@@ -81,7 +81,7 @@ const char *showroom_get_ingest(const char *server, const char *accessKey)
 	curl_easy_getinfo(curl_handle, CURLINFO_RESPONSE_CODE, &response_code);
 	if (response_code != 200) {
 		blog(LOG_WARNING,
-		     "younow_get_ingest: curl_easy_perform() returned code: %ld",
+		     "showroom_get_ingest: curl_easy_perform() returned code: %ld",
 		     response_code);
 		curl_easy_cleanup(curl_handle);
 		free(chunk.memory);
@@ -92,7 +92,7 @@ const char *showroom_get_ingest(const char *server, const char *accessKey)
 
 	if (chunk.size == 0) {
 		blog(LOG_WARNING,
-		     "younow_get_ingest: curl_easy_perform() returned empty response");
+		     "showroom_get_ingest: curl_easy_perform() returned empty response");
 		free(chunk.memory);
 		return server;
 	}
@@ -104,7 +104,7 @@ const char *showroom_get_ingest(const char *server, const char *accessKey)
 
 	current_ingest = strdup(chunk.memory);
 	free(chunk.memory);
-	blog(LOG_INFO, "younow_get_ingest: returning ingest: %s",
+	blog(LOG_INFO, "showroom_get_ingest: returning ingest: %s",
 	     current_ingest);
 	return current_ingest;
 }
