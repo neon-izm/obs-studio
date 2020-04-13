@@ -1,15 +1,18 @@
 #include <util/curl/curl-helper.h>
 #include <stdlib.h>
 #include <string.h>
-
+#include <jansson.h>
 #include <util/dstr.h>
 #include "util/base.h"
+#include <obs-module.h>
+#include <util/platform.h>
 #include "showroom.h"
+#include <util/threading.h>
 struct showroom_mem_struct {
 	char *memory;
 	size_t size;
 };
-static char *current_ingest = NULL;
+static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 static size_t showroom_write_cb(void *contents, size_t size, size_t nmemb,
 			      void *userp)
 {
@@ -18,7 +21,7 @@ static size_t showroom_write_cb(void *contents, size_t size, size_t nmemb,
 
 	mem->memory = realloc(mem->memory, mem->size + realsize + 1);
 	if (mem->memory == NULL) {
-		blog(LOG_WARNING, "yyounow_write_cb: realloc returned NULL");
+		blog(LOG_WARNING, "showroom_write_cb: realloc returned NULL");
 		return 0;
 	}
 
@@ -28,9 +31,58 @@ static size_t showroom_write_cb(void *contents, size_t size, size_t nmemb,
 
 	return realsize;
 }
-
-const char *showroom_get_ingest(const char *server, const char *accessKey)
+showroom_ingest get_ingest_from_json(char *str)
 {
+	json_error_t error;
+	json_t *root;
+	showroom_ingest result;
+	root = json_loads(str, JSON_REJECT_DUPLICATES,&error);
+	if (!root) {
+		return result;
+	}
+	result.url = json_string_value(json_object_get(root, "streaming_url_rtmp"));
+	result.key = json_string_value(json_object_get(root, "streaming_key"));
+	//result->url = url;
+	//result->key = key;
+	return result;
+	/*size = json_array_size(root);
+	for (i = 0; i < size; i++) {
+		json_t *data, *sha, *commit, *message;
+		const char *message_text;
+
+		data = json_array_get(root, i);
+		if (!json_is_object(data)) {
+			
+		}
+	}*/
+}
+const char* get_access_key_from_json(char* str)
+{
+	json_error_t error;
+	json_t *root;
+	char* result;
+	root = json_loads(str, JSON_REJECT_DUPLICATES, &error);
+	if (!root) {
+		return "";
+	}
+	result = json_string_value(json_object_get(root, "access_key"));
+	return result;
+
+}
+const showroom_ingest showroom_get_ingest(const char *server,const char *accessKey)
+{	//"PbvUohz75YSMN4krNpCL75SmHph6FNdVFXKND43FojPbujOpB6OD2y3J6Yj8BdHmlx6wWWKPzYk0bYj2hMtbmFZPp7Ve3d4DEPgW9ODLfuQC7acm1hWN5ZwEDRFDmYDA"
+	char *config = "";
+	char *fileName = obs_module_config_path("showroom_ingests.json");
+	if (os_file_exists(fileName)) {
+		char *data = os_quick_read_utf8_file(fileName);
+
+		pthread_mutex_lock(&mutex);
+		strcpy(config, data);
+		pthread_mutex_unlock(&mutex);
+
+		bfree(data);
+	}
+	//char *accessKey = get_access_key_from_json(config);
 	CURL *curl_handle;
 	CURLcode res;
 	struct showroom_mem_struct chunk;
@@ -68,14 +120,16 @@ const char *showroom_get_ingest(const char *server, const char *accessKey)
 
 	res = curl_easy_perform(curl_handle);
 	dstr_free(&uri);
-
+	showroom_ingest ingest;
+	ingest.url = "";
+	ingest.key = "";
 	if (res != CURLE_OK) {
 		blog(LOG_WARNING,
 		     "showroom_get_ingest: curl_easy_perform() failed: %s",
 		     curl_easy_strerror(res));
 		curl_easy_cleanup(curl_handle);
 		free(chunk.memory);
-		return server;
+		return ingest;
 	}
 
 	curl_easy_getinfo(curl_handle, CURLINFO_RESPONSE_CODE, &response_code);
@@ -85,7 +139,7 @@ const char *showroom_get_ingest(const char *server, const char *accessKey)
 		     response_code);
 		curl_easy_cleanup(curl_handle);
 		free(chunk.memory);
-		return server;
+		return ingest;
 	}
 
 	curl_easy_cleanup(curl_handle);
@@ -94,17 +148,12 @@ const char *showroom_get_ingest(const char *server, const char *accessKey)
 		blog(LOG_WARNING,
 		     "showroom_get_ingest: curl_easy_perform() returned empty response");
 		free(chunk.memory);
-		return server;
+		return ingest;
 	}
-
-	if (current_ingest) {
-		free(current_ingest);
-		current_ingest = NULL;
-	}
-
-	current_ingest = strdup(chunk.memory);
+	//current_ingest = (showroom_ingest *)malloc(sizeof(showroom_ingest));
+	char* response = strdup(chunk.memory);
+	ingest = get_ingest_from_json(response);
 	free(chunk.memory);
-	blog(LOG_INFO, "showroom_get_ingest: returning ingest: %s",
-	     current_ingest);
-	return current_ingest;
+	//free(ingest);
+	return ingest;
 }

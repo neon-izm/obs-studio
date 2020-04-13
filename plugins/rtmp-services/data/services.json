@@ -1739,7 +1739,7 @@
             "servers": [
                 {
                     "name": "Default",
-                    "url": "rtmp://202.214.205.41:1935/liveorigin"
+                    "url": "https://www.dev.showroom-live.com/api/obs/streaming_info?obs_key="
                 }
             ],
             "recommended": {

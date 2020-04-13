@@ -1,13 +1,13 @@
 #include <QMessageBox>
 #include <QUrl>
-
 #include "window-basic-settings.hpp"
 #include "obs-frontend-api.h"
 #include "obs-app.hpp"
 #include "window-basic-main.hpp"
 #include "qt-wrappers.hpp"
 #include "url-push-button.hpp"
-
+#include <obs-module.h>
+#include <util/config-file.h>
 #ifdef BROWSER_AVAILABLE
 #include <browser-panel.hpp>
 #include "auth-oauth.hpp"
@@ -31,6 +31,7 @@ enum class Section : int {
 
 inline bool OBSBasicSettings::IsCustomService() const
 {
+
 	return ui->service->currentData().toInt() == (int)ListOpt::Custom;
 }
 
@@ -122,6 +123,10 @@ void OBSBasicSettings::LoadStream1Settings()
 
 		idx = config_get_int(main->Config(), "Mixer", "AddonChoice");
 		ui->mixerAddonDropdown->setCurrentIndex(idx);
+
+		const char *showroomKey = config_get_string(main->Config(), "SHOWROOM", "AccessKey");
+		ui->showroomAddonLineEdit->setText(showroomKey);
+		
 	}
 
 	UpdateServerList();
@@ -199,6 +204,7 @@ void OBSBasicSettings::SaveStream1Settings()
 		if (choiceExists && currentChoice != newChoice)
 			forceAuthReload = true;
 	}
+
 	if (!!auth && strcmp(auth->service(), "Mixer") == 0) {
 		bool choiceExists = config_has_user_value(
 			main->Config(), "Mixer", "AddonChoice");
@@ -212,7 +218,26 @@ void OBSBasicSettings::SaveStream1Settings()
 		if (choiceExists && currentChoice != newChoice)
 			forceAuthReload = true;
 	}
+	QString serviceName = ui->service->currentText();
+	if (strcmp(serviceName.toLocal8Bit().constData(), "SHOWROOM") == 0) {
+		/*struct dstr output = {0};
+		char *fileName = "showroom_ingests.json";
+		char *filePath;
+		dstr_copy(&output, obs->module_config_path);
+		if (!dstr_is_empty(&output) && dstr_end(&output) != '/')
+			dstr_cat_ch(&output, '/');
+		dstr_cat(&output, "showroom");
+		dstr_cat_ch(&output, '/');
+		dstr_cat(&output, fileName);
 
+		
+		char *json = "{access_key}";
+		os_quick_write_utf8_file(output.array, json, strlen(json), false);*/
+		obs_data_set_bool(settings, "AccessKey",
+				  ui->showroomAddonLineEdit->text()
+					  .toLocal8Bit()
+					  .constData());
+	}
 	obs_data_set_string(settings, "key", QT_TO_UTF8(ui->key->text()));
 
 	OBSService newService = obs_service_create(
