@@ -670,6 +670,8 @@ void OBSBasic::DeferSaveEnd()
 	}
 }
 
+static void LogFilter(obs_source_t *, obs_source_t *filter, void *v_val);
+
 static void LoadAudioDevice(const char *name, int channel, obs_data_t *parent)
 {
 	obs_data_t *data = obs_data_get_obj(parent, name);
@@ -679,6 +681,10 @@ static void LoadAudioDevice(const char *name, int channel, obs_data_t *parent)
 	obs_source_t *source = obs_load_source(data);
 	if (source) {
 		obs_set_output_source(channel, source);
+
+		const char *name = obs_source_get_name(source);
+		blog(LOG_INFO, "[Loaded global audio device]: '%s'", name);
+		obs_source_enum_filters(source, LogFilter, (void *)(intptr_t)1);
 		obs_source_release(source);
 	}
 
@@ -6225,6 +6231,9 @@ void OBSBasic::on_actionEditTransform_triggered()
 	if (transformWindow)
 		transformWindow->close();
 
+	if (!GetCurrentSceneItem())
+		return;
+
 	transformWindow = new OBSBasicTransform(this);
 	transformWindow->show();
 	transformWindow->setAttribute(Qt::WA_DeleteOnClose, true);
@@ -7264,7 +7273,7 @@ void OBSBasic::on_actionCopySource_triggered()
 		copyVisible = obs_sceneitem_visible(item);
 
 		uint32_t output_flags = obs_source_get_output_flags(source);
-		if (!(output_flags & OBS_SOURCE_DO_NOT_DUPLICATE) == 0)
+		if (output_flags & OBS_SOURCE_DO_NOT_DUPLICATE)
 			allowPastingDuplicate = false;
 	}
 
