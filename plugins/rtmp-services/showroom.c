@@ -104,7 +104,6 @@ const showroom_ingest showroom_get_ingest(const char *server,const char *accessK
 	dstr_init(&uri);
 	dstr_copy(&uri, server);
 	dstr_ncat(&uri, accessKey, strlen(accessKey));
-	curl_easy_setopt(curl_handle, CURLOPT_USERPWD, "");
 	curl_easy_setopt(curl_handle, CURLOPT_URL, uri.array);
 	curl_easy_setopt(curl_handle, CURLOPT_SSL_VERIFYPEER, true);
 	curl_easy_setopt(curl_handle, CURLOPT_SSL_VERIFYHOST, 2L);
