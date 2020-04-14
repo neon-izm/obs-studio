@@ -44,7 +44,6 @@ void OBSBasicSettings::InitStreamPage()
 	ui->twitchAddonLabel->setVisible(false);
 	ui->mixerAddonDropdown->setVisible(false);
 	ui->mixerAddonLabel->setVisible(false);
-	ui->showroomAddonLabel->setVisible(false);
 	int vertSpacing = ui->topStreamLayout->verticalSpacing();
 
 	QMargins m = ui->topStreamLayout->contentsMargins();
@@ -123,9 +122,6 @@ void OBSBasicSettings::LoadStream1Settings()
 
 		idx = config_get_int(main->Config(), "Mixer", "AddonChoice");
 		ui->mixerAddonDropdown->setCurrentIndex(idx);
-
-		const char *showroomKey = config_get_string(main->Config(), "SHOWROOM", "AccessKey");
-		ui->showroomAddonLineEdit->setText(showroomKey);
 		
 	}
 
@@ -219,25 +215,7 @@ void OBSBasicSettings::SaveStream1Settings()
 			forceAuthReload = true;
 	}
 	QString serviceName = ui->service->currentText();
-	if (strcmp(serviceName.toLocal8Bit().constData(), "SHOWROOM") == 0) {
-		/*struct dstr output = {0};
-		char *fileName = "showroom_ingests.json";
-		char *filePath;
-		dstr_copy(&output, obs->module_config_path);
-		if (!dstr_is_empty(&output) && dstr_end(&output) != '/')
-			dstr_cat_ch(&output, '/');
-		dstr_cat(&output, "showroom");
-		dstr_cat_ch(&output, '/');
-		dstr_cat(&output, fileName);
 
-		
-		char *json = "{access_key}";
-		os_quick_write_utf8_file(output.array, json, strlen(json), false);*/
-		obs_data_set_bool(settings, "AccessKey",
-				  ui->showroomAddonLineEdit->text()
-					  .toLocal8Bit()
-					  .constData());
-	}
 	obs_data_set_string(settings, "key", QT_TO_UTF8(ui->key->text()));
 
 	OBSService newService = obs_service_create(
@@ -359,7 +337,6 @@ void OBSBasicSettings::on_service_currentIndexChanged(int)
 	ui->twitchAddonLabel->setVisible(false);
 	ui->mixerAddonDropdown->setVisible(false);
 	ui->mixerAddonLabel->setVisible(false);
-	ui->showroomAddonLabel->setVisible(false);
 #ifdef BROWSER_AVAILABLE
 	if (cef) {
 		if (lastService != service.c_str()) {
@@ -373,7 +350,6 @@ void OBSBasicSettings::on_service_currentIndexChanged(int)
 			ui->streamKeyWidget->setVisible(true);
 			ui->streamKeyLabel->setVisible(true);
 			ui->connectAccount2->setVisible(can_auth);
-			ui->showroomAddonLabel->setVisible(true);
 		}
 	} else {
 		ui->connectAccount2->setVisible(false);
@@ -409,6 +385,16 @@ void OBSBasicSettings::on_service_currentIndexChanged(int)
 		OnAuthConnected();
 	}
 #endif
+	if (service.compare("SHOWROOM") == 0) {
+		ui->streamKeyLabel->setText(QCoreApplication::translate(
+			"OBSBasicSettings",
+			"Basic.AutoConfig.StreamPage.AccessKey", nullptr));
+	}
+	else {
+		ui->streamKeyLabel->setText(QCoreApplication::translate(
+			"OBSBasicSettings",
+			"Basic.AutoConfig.StreamPage.StreamKey", nullptr));
+	}
 }
 
 void OBSBasicSettings::UpdateServerList()
@@ -521,9 +507,6 @@ void OBSBasicSettings::OnOAuthStreamKeyConnected()
 		if (strcmp(a->service(), "Mixer") == 0) {
 			ui->mixerAddonLabel->setVisible(true);
 			ui->mixerAddonDropdown->setVisible(true);
-		}
-		if (strcmp(a->service(), "SHOWROOM") == 0) {
-			ui->showroomAddonLabel->setVisible(true);
 		}
 	}
 
