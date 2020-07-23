@@ -235,10 +235,21 @@ QWidget *OBSPropertiesView::AddText(obs_property_t *prop, QFormLayout *layout,
 {
 	const char *name = obs_property_name(prop);
 	const char *val = obs_data_get_string(settings, name);
+	const bool monospace = obs_property_text_monospace(prop);
 	obs_text_type type = obs_property_text_type(prop);
 
 	if (type == OBS_TEXT_MULTILINE) {
 		QPlainTextEdit *edit = new QPlainTextEdit(QT_UTF8(val));
+#if QT_VERSION >= QT_VERSION_CHECK(5, 10, 0)
+		edit->setTabStopDistance(40);
+#else
+		edit->setTabStopWidth(40);
+#endif
+		if (monospace) {
+			QFont f("Courier");
+			f.setStyleHint(QFont::Monospace);
+			edit->setFont(f);
+		}
 		return NewWidget(prop, edit, SIGNAL(textChanged()));
 
 	} else if (type == OBS_TEXT_PASSWORD) {
@@ -1425,6 +1436,35 @@ void OBSPropertiesView::AddProperty(obs_property_t *property,
 	if (!widget)
 		return;
 
+	if (obs_property_long_description(property)) {
+		QString lStr = "<html>%1 <img src='%2' style=' \
+				vertical-align: bottom;  \
+				' /></html>";
+		bool lightTheme = palette().text().color().redF() < 0.5;
+		QString file = lightTheme ? ":/res/images/help.svg"
+					  : ":/res/images/help_light.svg";
+		if (label) {
+			label->setText(lStr.arg(label->text(), file));
+			label->setToolTip(
+				obs_property_long_description(property));
+		} else if (type == OBS_PROPERTY_BOOL) {
+			QWidget *newWidget = new QWidget();
+			QHBoxLayout *boxLayout = new QHBoxLayout(newWidget);
+			boxLayout->setContentsMargins(0, 0, 0, 0);
+			boxLayout->setAlignment(Qt::AlignLeft);
+
+			QCheckBox *check = qobject_cast<QCheckBox *>(widget);
+			QLabel *help =
+				new QLabel(lStr.arg(check->text(), file));
+			help->setToolTip(
+				obs_property_long_description(property));
+			check->setText("");
+			boxLayout->addWidget(check);
+			boxLayout->addWidget(help);
+			widget = newWidget;
+		}
+	}
+
 	layout->addRow(label, widget);
 
 	if (!lastFocused.empty())
@@ -1654,7 +1694,7 @@ bool WidgetInfo::ColorChanged(const char *setting)
 	 * other open QDialogs on exit, and
 	 * https://bugreports.qt-project.org/browse/QTBUG-34532
 	 */
-#ifdef __APPLE__
+#ifndef _WIN32
 	options |= QColorDialog::DontUseNativeDialog;
 #endif
 
@@ -1688,7 +1728,7 @@ bool WidgetInfo::FontChanged(const char *setting)
 
 	QFontDialog::FontDialogOptions options;
 
-#ifdef __APPLE__
+#ifndef _WIN32
 	options = QFontDialog::DontUseNativeDialog;
 #endif
 

@@ -117,6 +117,8 @@ private:
 	bool loading = true;
 	bool forceAuthReload = false;
 	std::string savedTheme;
+	int sampleRateIndex = 0;
+	int channelIndex = 0;
 
 	int lastSimpleRecQualityIdx = 0;
 	int lastChannelSetupIdx = 0;
@@ -232,6 +234,8 @@ private:
 	void OnOAuthStreamKeyConnected();
 	void OnAuthConnected();
 	QString lastService;
+	int prevLangIndex;
+	bool prevBrowserAccel;
 private slots:
 	void UpdateServerList();
 	void UpdateKeyLink();

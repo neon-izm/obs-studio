@@ -26,6 +26,7 @@ set(libobs-d3d11_SOURCES
 	d3d11-stagesurf.cpp
 	d3d11-subsystem.cpp
 	d3d11-texture2d.cpp
+	d3d11-texture3d.cpp
 	d3d11-vertexbuffer.cpp
 	d3d11-duplicator.cpp
 	d3d11-rebuild.cpp
@@ -33,6 +34,7 @@ set(libobs-d3d11_SOURCES
 
 set(libobs-d3d11_HEADERS
 	${CMAKE_CURRENT_BINARY_DIR}/d3d11-config.h
+	intel-nv12-support.hpp
 	d3d11-shaderprocessor.hpp
 	d3d11-subsystem.hpp)
 

@@ -40,12 +40,10 @@ const char *get_module_extension(void)
 #endif
 
 static const char *module_bin[] = {
-	"obs-plugins/" BIT_STRING,
 	"../../obs-plugins/" BIT_STRING,
 };
 
-static const char *module_data[] = {"data/%module%",
-				    "../../data/obs-plugins/%module%"};
+static const char *module_data[] = {"../../data/obs-plugins/%module%"};
 
 static const int module_patterns_size =
 	sizeof(module_bin) / sizeof(module_bin[0]);
@@ -61,9 +59,6 @@ char *find_libobs_data_file(const char *file)
 {
 	struct dstr path;
 	dstr_init(&path);
-
-	if (check_path(file, "data/libobs/", &path))
-		return path.array;
 
 	if (check_path(file, "../../data/libobs/", &path))
 		return path.array;
@@ -130,16 +125,22 @@ static void log_available_memory(void)
 	     (DWORD)(ms.ullAvailPhys / 1048576), note);
 }
 
+extern const char *get_win_release_id();
+
 static void log_windows_version(void)
 {
 	struct win_version_info ver;
 	get_win_ver(&ver);
 
+	const char *release_id = get_win_release_id();
+
 	bool b64 = is_64_bit_windows();
 	const char *windows_bitness = b64 ? "64" : "32";
 
-	blog(LOG_INFO, "Windows Version: %d.%d Build %d (revision: %d; %s-bit)",
-	     ver.major, ver.minor, ver.build, ver.revis, windows_bitness);
+	blog(LOG_INFO,
+	     "Windows Version: %d.%d Build %d (release: %s; revision: %d; %s-bit)",
+	     ver.major, ver.minor, ver.build, release_id, ver.revis,
+	     windows_bitness);
 }
 
 static void log_admin_status(void)

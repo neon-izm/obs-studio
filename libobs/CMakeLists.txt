@@ -174,20 +174,21 @@ elseif(UNIX)
 		util/pipe-posix.c
 		util/platform-nix.c)
 
-	if(CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64")
+	if(NEEDS_SIMDE)
 		set(libobs_PLATFORM_HEADERS
-			util/aarch/check.h
-			util/aarch/hedley.h
-			util/aarch/mmx.h
-			util/aarch/simde-arch.h
-			util/aarch/simde-common.h
-			util/aarch/sse.h
-			util/aarch/sse2.h
+			util/simde/check.h
+			util/simde/hedley.h
+			util/simde/mmx.h
+			util/simde/simde-arch.h
+			util/simde/simde-common.h
+			util/simde/sse.h
+			util/simde/sse2.h
 			util/threading-posix.h)
 	else()
 		set(libobs_PLATFORM_HEADERS
 			util/threading-posix.h)
 	endif()
+
 	if(HAVE_PULSEAUDIO)
 		set(libobs_audio_monitoring_HEADERS
 			audio-monitoring/pulse/pulseaudio-wrapper.h)
@@ -289,6 +290,7 @@ set(libobs_graphics_SOURCES
 	graphics/math-extra.c
 	graphics/graphics-imports.c)
 set(libobs_graphics_HEADERS
+	graphics/half.h
 	graphics/plane.h
 	graphics/quat.h
 	graphics/input.h
@@ -348,6 +350,7 @@ set(libobs_util_SOURCES
 	util/cf-parser.c
 	util/profiler.c)
 set(libobs_util_HEADERS
+	util/curl/curl-helper.h
 	util/sse-intrin.h
 	util/array-serializer.h
 	util/file-serializer.h
@@ -474,22 +477,9 @@ target_compile_definitions(libobs
 	PUBLIC
 		HAVE_OBSCONFIG_H)
 
-if(CMAKE_SYSTEM_PROCESSOR MATCHES "^(powerpc|ppc)64le")
-	target_compile_options(libobs
-		PUBLIC
-			-mvsx)
-	add_compile_definitions(NO_WARN_X86_INTRINSICS)
-elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64")
-        target_compile_options(libobs
-                        PUBLIC)
-elseif(NOT MSVC)
-	target_compile_options(libobs
-		PUBLIC
-			-mmmx
-			-msse
-			-msse2)
-endif()
-
+target_compile_options(libobs
+	PUBLIC
+	${ARCH_SIMD_FLAGS})
 
 target_compile_options(libobs
 	PUBLIC

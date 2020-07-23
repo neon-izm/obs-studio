@@ -8,6 +8,8 @@
 #include <QStaticText>
 #include <QSvgRenderer>
 #include <QAbstractListModel>
+#include <obs.hpp>
+#include <obs-frontend-api.h>
 
 class QLabel;
 class QCheckBox;
@@ -144,6 +146,8 @@ class SourceTree : public QListView {
 	QStaticText textNoSources;
 	QSvgRenderer iconNoSources;
 
+	bool iconsVisible = true;
+
 	void UpdateNoSourcesMessage();
 
 	void ResetWidgets();
@@ -178,9 +182,11 @@ public:
 	bool GroupedItemsSelected() const;
 
 	void UpdateIcons();
+	void SetIconsVisible(bool visible);
 
 public slots:
 	inline void ReorderItems() { GetStm()->ReorderItems(); }
+	inline void RefreshItems() { GetStm()->SceneChanged(); }
 	void Remove(OBSSceneItem item);
 	void GroupSelectedItems();
 	void UngroupSelectedGroups();

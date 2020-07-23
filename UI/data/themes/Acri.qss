@@ -142,7 +142,6 @@ SourceTree::item {
 	margin-bottom: 2px;
 	margin-top: 0px;
 	border: 1px solid transparent;
-	height: 24px;
 }
 
 QListWidget QLineEdit {
@@ -924,6 +923,24 @@ OBSBasicSettings QListWidget::item {
     padding-bottom: 5px;
 }
 
+/* Table */
+
+QTableView {
+    gridline-color: #333336;
+}
+
+QHeaderView {
+    border: none;
+}
+QHeaderView::section {
+    background-color: #101010;
+    border: 1px solid #333336;
+    border-left: none;
+}
+*[themeID="trashIcon"] {
+    margin: 0;
+}
+
 /* Locked CheckBox */
 
 LockedCheckBox {
@@ -1049,4 +1066,35 @@ SceneTree#scenes {
 
 * [themeID="replayIconSmall"] {
     qproperty-icon: url(./Dark/save.svg);
+}
+
+/* Studio Mode T-Bar */
+
+QSlider[themeID="tBarSlider"] {
+	height: 28px;
+}
+
+QSlider::groove:horizontal[themeID="tBarSlider"] {
+	height: 5px;
+	background-color: QLinearGradient(x1: 0, y1: 0, x2: 0, y2: 1,
+		stop: 0 rgb(31,30,31),
+		stop: 0.75 rgb(50, 49, 50));
+	border: none;
+	border-radius: 2px;
+}
+
+QSlider::sub-page:horizontal[themeID="tBarSlider"] {
+	height: 5px;
+	background-color: QLinearGradient(x1: 0, y1: 0, x2: 0, y2: 1,
+		stop: 0 rgb(31,30,31),
+		stop: 0.75 rgb(50, 49, 50));
+	border: none;
+	border-radius: 2px;
+}
+
+QSlider::handle:horizontal[themeID="tBarSlider"] {
+	background-color: #d2d2d2;
+	width: 14px;
+	height: 28px;
+	margin: -28px 0px;
 }
